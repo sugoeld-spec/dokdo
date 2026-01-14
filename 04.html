@@ -40,6 +40,14 @@
             display: inline-block; vertical-align: middle; margin-right: 8px;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="antialiased selection:bg-teal-100">
@@ -49,7 +57,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-18 py-4 items-center">
                 <div class="flex items-center space-x-6">
-                    <a href="#" class="flex items-center group px-3 py-1.5 rounded-full hover:bg-slate-100 transition-all">
+                    <!-- Home Button (Island Shape) - Linked to index.html -->
+                    <a href="index.html" class="flex items-center group px-3 py-1.5 rounded-full hover:bg-slate-100 transition-all" title="홈으로 이동">
                         <div class="island-shape mr-3 group-hover:scale-110 transition-transform">
                             <div class="island-peak-west"></div>
                             <div class="island-peak-east"></div>
@@ -58,7 +67,9 @@
                         <span class="text-sm font-bold text-sky-900 tracking-widest uppercase">Home</span>
                     </a>
                     <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
-                    <span class="text-xl font-bold text-sky-900 serif tracking-tight">독도 아카이브</span>
+                    <a href="index.html" class="flex items-center cursor-pointer">
+                        <span class="text-xl font-bold text-sky-900 serif tracking-tight">독도 아카이브</span>
+                    </a>
                 </div>
                 <div class="hidden md:flex space-x-8">
                     <span class="text-slate-400 text-sm cursor-not-allowed">정책</span>
@@ -107,7 +118,7 @@
                 </div>
             </div>
 
-            <!-- Participation List Section (Local UI Update) -->
+            <!-- Participation List Section -->
             <div class="lg:col-span-2">
                 <h2 class="text-2xl font-bold text-slate-900 serif mb-6">최근 참여 현황</h2>
                 <div id="opinionList" class="space-y-4">
@@ -142,39 +153,58 @@
             btnText.innerHTML = '<span class="loader"></span>처리 중...';
 
             // Call the Apps Script function in Code.gs
-            google.script.run
-                .withSuccessHandler(function(response) {
-                    if(response.status === 'success') {
-                        addToList(author, content, date);
-                        form.reset();
-                        showMessage('성공: 시트에 저장되었습니다!', 'text-teal-600');
-                    } else {
-                        showMessage('오류: ' + response.message, 'text-red-600');
-                    }
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function(response) {
+                        if(response.status === 'success') {
+                            addToList(author, content, date);
+                            form.reset();
+                            showMessage('성공: 시트에 저장되었습니다!', 'text-teal-600');
+                        } else {
+                            showMessage('오류: ' + response.message, 'text-red-600');
+                        }
+                        resetButton();
+                    })
+                    .withFailureHandler(function(err) {
+                        showMessage('서버 오류가 발생했습니다.', 'text-red-600');
+                        resetButton();
+                    })
+                    .processForm({ author, content, date });
+            } else {
+                // Fallback for local preview without Apps Script environment
+                setTimeout(() => {
+                    addToList(author, content, date);
+                    form.reset();
+                    showMessage('알림: 로컬 미리보기 모드입니다. (시트 저장 제외)', 'text-blue-600');
                     resetButton();
-                })
-                .withFailureHandler(function(err) {
-                    showMessage('서버 오류가 발생했습니다.', 'text-red-600');
-                    resetButton();
-                })
-                .processForm({ author, content, date });
+                }, 1000);
+            }
         });
 
         /**
          * Add a new card to the list upon successful submission
          */
         function addToList(author, content, date) {
-            if (emptyMsg) emptyMsg.remove();
+            if (emptyMsg && document.getElementById('emptyMsg')) emptyMsg.remove();
             const card = document.createElement('div');
             card.className = "bg-white p-5 rounded-xl shadow-sm border-l-4 border-teal-500 animate-fade-in";
             card.innerHTML = `
                 <div class="flex justify-between mb-2">
-                    <span class="font-bold text-slate-800">${author}</span>
+                    <span class="font-bold text-slate-800">${escapeHtml(author)}</span>
                     <span class="text-xs text-slate-400">${date}</span>
                 </div>
-                <p class="text-slate-600 text-sm">${content}</p>
+                <p class="text-slate-600 text-sm">${escapeHtml(content)}</p>
             `;
             opinionList.prepend(card);
+        }
+
+        /**
+         * Simple HTML escape function for security
+         */
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         /**
@@ -183,6 +213,7 @@
         function showMessage(msg, colorClass) {
             statusMsg.textContent = msg;
             statusMsg.className = `mt-4 text-xs text-center block ${colorClass}`;
+            statusMsg.classList.remove('hidden');
             setTimeout(() => { statusMsg.classList.add('hidden'); }, 5000);
         }
 
