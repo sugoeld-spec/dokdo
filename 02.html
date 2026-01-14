@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>독도 영유권 역사 아카이브</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Chosen Palette: Warm Neutrals & Deep Ocean Blue */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #fafaf9; /* stone-50 */
+            color: #292524; /* stone-800 */
+            scroll-behavior: smooth;
+        }
+        
+        h1, h2, h3, .serif {
+            font-family: 'Noto Serif KR', serif;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+            height: 300px;
+            margin: 0 auto;
+        }
+
+        /* Custom Scrollbar */
+        .timeline-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .timeline-scroll::-webkit-scrollbar-track {
+            background: #e7e5e4;
+        }
+        .timeline-scroll::-webkit-scrollbar-thumb {
+            background-color: #a8a29e;
+            border-radius: 20px;
+        }
+
+        /* Timeline Connector Line */
+        .timeline-line-left::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 23px;
+            width: 2px;
+            background: #d6d3d1;
+            z-index: 0;
+        }
+        
+        .card-hover {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Interactive Active State (Highlight) */
+        .card-active {
+            border-color: #1e3a8a !important; /* blue-900 */
+            background-color: #eff6ff !important; /* blue-50 */
+            box-shadow: 0 0 0 2px rgba(30, 58, 138, 0.1), 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+        }
+        .card-active h3 {
+            color: #1e3a8a !important;
+        }
+    </style>
+    <!-- Application Structure Plan: 
+         1. Header: Added Home Button linking to index.html.
+         2. Interactive Dashboard: 
+            - Doughnut Chart is now CLICKABLE. Clicking a slice filters the timeline below.
+         3. Interactive Timeline: 
+            - Cards are CLICKABLE. Clicking a card highlights it (focus mode).
+         4. Navigation: Smooth scrolling interactions.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="antialiased selection:bg-stone-200 selection:text-stone-900">
+
+    <!-- Header Section -->
+    <header class="bg-white border-b border-stone-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-blue-900 text-white flex items-center justify-center font-bold serif rounded">독</div>
+                <h1 class="text-xl font-bold text-stone-900 tracking-tight hidden sm:block">독도 영유권 아카이브</h1>
+                <h1 class="text-xl font-bold text-stone-900 tracking-tight sm:hidden">독도 아카이브</h1>
+            </div>
+            
+            <!-- Added Home Button -->
+            <nav class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-medium transition-colors group">
+                    <span>🏠</span>
+                    <span class="group-hover:text-stone-900">홈으로</span>
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Intro Section -->
+        <section class="mb-12 text-center max-w-3xl mx-auto">
+            <h2 class="text-3xl sm:text-4xl font-bold text-stone-900 mb-4 serif">역사의 기록, 진실의 증명</h2>
+            <p class="text-lg text-stone-600 leading-relaxed">
+                조선 전기부터 현대까지 독도 영유권의 역사를 탐색하세요.<br>
+                <span class="text-sm text-stone-400 mt-2 block">💡 팁: 차트의 파이 조각을 클릭하면 해당 기록만 모아볼 수 있습니다.</span>
+            </p>
+        </section>
+
+        <!-- Dashboard Section: Charts & Analytics -->
+        <section class="mb-12">
+            <div class="bg-white rounded-xl shadow border border-stone-200 p-6 sm:p-8">
+                <div class="mb-6">
+                    <h3 class="text-xl font-bold text-stone-800 flex items-center gap-2">
+                        <span class="w-2 h-6 bg-blue-900 rounded-sm"></span>
+                        데이터로 보는 역사적 흐름
+                    </h3>
+                    <p class="text-stone-500 text-sm mt-1">
+                        왼쪽 차트의 영역을 클릭하면 하단 타임라인이 자동으로 필터링됩니다.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+                    <!-- Chart 1: Event Categories (Interactive) -->
+                    <div class="flex flex-col">
+                        <h4 class="text-sm font-semibold text-stone-500 uppercase tracking-wider mb-4 text-center">기록 및 사건 유형 (클릭하여 필터링)</h4>
+                        <div class="chart-container cursor-pointer">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Timeline Density -->
+                    <div class="flex flex-col">
+                        <h4 class="text-sm font-semibold text-stone-500 uppercase tracking-wider mb-4 text-center">세기별 주요 사건 발생 빈도</h4>
+                        <div class="chart-container">
+                            <canvas id="timeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Filter Controls -->
+        <section class="mb-8 sticky top-20 z-40 bg-[#fafaf9]/95 backdrop-blur py-2 border-b border-stone-200" id="filterSection">
+            <div class="flex flex-wrap gap-2 justify-center" id="filterContainer">
+                <button onclick="filterTimeline('all')" class="filter-btn active px-4 py-2 rounded-full text-sm font-medium transition-colors bg-stone-800 text-white hover:bg-stone-700" data-filter="all">
+                    전체 보기
+                </button>
+                <button onclick="filterTimeline('korea')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white border border-stone-300 text-stone-600 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-200" data-filter="korea">
+                    🇰🇷 한국 측 기록
+                </button>
+                <button onclick="filterTimeline('japan_evidence')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white border border-stone-300 text-stone-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200" data-filter="japan_evidence">
+                    📜 일본의 인정
+                </button>
+                <button onclick="filterTimeline('conflict')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white border border-stone-300 text-stone-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200" data-filter="conflict">
+                    ⚠️ 분쟁/침탈
+                </button>
+                <button onclick="filterTimeline('international')" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-white border border-stone-300 text-stone-600 hover:bg-purple-50 hover:text-purple-700 hover:border-purple-200" data-filter="international">
+                    ⚖️ 국제 조약
+                </button>
+            </div>
+        </section>
+
+        <!-- Timeline Section -->
+        <section class="relative min-h-[500px] timeline-line-left pl-2">
+            
+            <div id="timelineContainer" class="space-y-6 relative max-w-4xl">
+                <!-- Timeline items will be injected here via JS -->
+            </div>
+            
+            <div id="noDataMessage" class="hidden text-center py-20 text-stone-500">
+                선택한 조건에 맞는 기록이 없습니다.
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-12 mt-20">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="mb-4 font-serif text-lg text-stone-200">역사를 잊은 민족에게 미래는 없다</p>
+            <p class="text-sm">Source Data: 독도 관련 주요 역사 연표 (세종실록지리지 ~ 2011 일본 교과서 왜곡)</p>
+            <div class="mt-8">
+                <a href="index.html" class="inline-block px-6 py-2 border border-stone-700 rounded hover:bg-stone-800 transition-colors text-sm">홈으로 돌아가기</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- DATA STORE ---
+        const historyData = [
+            { year: 1454, title: "세종실록지리지", desc: "우산(독도)과 무릉(울릉도)이 강원도 울진현에 속한다고 기록. 독도가 우리 땅임을 밝힌 최초의 관찬 기록.", category: "korea" },
+            { year: 1531, title: "신증동국여지승람", desc: "독도가 조선의 영토임을 밝히는 관찬 지리지 편찬.", category: "korea" },
+            { year: 1667, title: "은주시청합기", desc: "일본 돗토리번의 보고서. 울릉도와 독도가 일본 영토 밖(조선 땅)임을 기록한 일본 문헌.", category: "japan_evidence" },
+            { year: 1693, title: "1차 안용복 사건", desc: "안용복이 일본으로 끌려가 막부에게 독도가 조선 땅임을 강력히 주장.", category: "korea" },
+            { year: 1696, title: "2차 안용복 사건", desc: "안용복이 일본에 건너가 항의. 일본 막부가 '울릉도 도해 금지령'을 내림.", category: "korea" },
+            { year: 1785, title: "삼국접양지도", desc: "일본 실학자 하야시 시헤이 제작. 독도를 조선색(황색)으로 칠하고 '조선의 것'이라 표기.", category: "japan_evidence" },
+            { year: 1877, title: "태정관 지령", desc: "일본 메이지 정부 최고 행정기관이 '독도와 울릉도는 일본과 관계없다'고 공식 인정. 결정적인 증거.", category: "japan_evidence" },
+            { year: 1900, title: "대한제국 칙령 41호", desc: "고종 황제가 독도를 울릉군의 관할 구역으로 명시하여 대내외에 공식 반포.", category: "korea" },
+            { year: 1905, title: "시마네현 고시 40호", desc: "일본이 러일전쟁 중 독도를 '다케시마'로 명명하고 불법적으로 자국 영토로 편입.", category: "conflict" },
+            { year: 1906, title: "심흥택 보고서", desc: "울릉군수 심흥택이 독도가 일본에 편입되었다는 소식을 듣고 중앙 정부에 보고.", category: "korea" },
+            { year: 1946, title: "SCAPIN 제677호", desc: "연합군최고사령관 지령. 독도를 일본의 통치권(행정관할 구역)에서 명시적으로 제외.", category: "international" },
+            { year: 1951, title: "샌프란시스코 강화조약", desc: "일본이 한국의 독립을 인정했으나, 조문에서 독도 명시가 누락되어 분쟁의 씨앗이 됨.", category: "international" },
+            { year: 1952, title: "평화선 선포", desc: "이승만 대통령이 독도를 포함한 인접 해양에 대한 주권을 선언.", category: "korea" },
+            { year: 1953, title: "독도의용수비대 활동", desc: "홍순칠 등 민간인들이 독도에 상주하며 일본의 침범을 막고 실효적 지배 강화.", category: "korea" },
+            { year: 1965, title: "한일기본조약", desc: "독도 문제를 구체적으로 언급하지 않고 봉합하여 이후 갈등의 불씨가 됨.", category: "international" },
+            { year: 1998, title: "신한일어업협정", desc: "독도가 한일 중간수역에 포함되면서 영유권 및 어업권 관련 논란 발생.", category: "conflict" },
+            { year: 2005, title: "다케시마의 날 제정", desc: "일본 시마네현 의회가 2월 22일을 '다케시마의 날'로 제정하는 조례안 통과.", category: "conflict" },
+            { year: 2011, title: "일본 교과서 왜곡", desc: "일본 중학교 사회과 교과서 14종에 독도 영유권 주장이 기술됨.", category: "conflict" }
+        ];
+
+        // --- CONFIG ---
+        const categoryConfig = {
+            'korea': { label: '한국 측 기록', color: 'bg-blue-900', text: 'text-blue-900', border: 'border-blue-200', bgLight: 'bg-blue-50', icon: '🇰🇷' },
+            'japan_evidence': { label: '일본의 인정', color: 'bg-emerald-600', text: 'text-emerald-700', border: 'border-emerald-200', bgLight: 'bg-emerald-50', icon: '📜' },
+            'conflict': { label: '분쟁/침탈', color: 'bg-red-600', text: 'text-red-700', border: 'border-red-200', bgLight: 'bg-red-50', icon: '⚠️' },
+            'international': { label: '국제 조약', color: 'bg-purple-600', text: 'text-purple-700', border: 'border-purple-200', bgLight: 'bg-purple-50', icon: '⚖️' }
+        };
+
+        let categoryChartInstance = null;
+
+        // --- CHART GENERATION ---
+        
+        function initCharts() {
+            // Data Processing
+            // The order here MUST match the data order for clicks to work correctly
+            const categories = ['korea', 'japan_evidence', 'conflict', 'international'];
+            const catCounts = { 'korea': 0, 'japan_evidence': 0, 'conflict': 0, 'international': 0 };
+            const eraCounts = { '1400s': 0, '1500s': 0, '1600s': 0, '1700s': 0, '1800s': 0, '1900-1950': 0, '1951-Present': 0 };
+
+            historyData.forEach(item => {
+                catCounts[item.category]++;
+                if(item.year < 1500) eraCounts['1400s']++;
+                else if(item.year < 1600) eraCounts['1500s']++;
+                else if(item.year < 1700) eraCounts['1600s']++;
+                else if(item.year < 1800) eraCounts['1700s']++;
+                else if(item.year < 1900) eraCounts['1800s']++;
+                else if(item.year <= 1950) eraCounts['1900-1950']++;
+                else eraCounts['1951-Present']++;
+            });
+
+            // 1. Interactive Doughnut Chart
+            const ctxCat = document.getElementById('categoryChart').getContext('2d');
+            categoryChartInstance = new Chart(ctxCat, {
+                type: 'doughnut',
+                data: {
+                    labels: categories.map(k => categoryConfig[k].label),
+                    datasets: [{
+                        data: categories.map(k => catCounts[k]),
+                        backgroundColor: ['#1e3a8a', '#059669', '#dc2626', '#9333ea'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (e, activeElements) => {
+                        if (activeElements.length > 0) {
+                            const index = activeElements[0].index;
+                            const selectedCategory = categories[index];
+                            filterTimeline(selectedCategory);
+                            // Visual feedback: scroll to timeline
+                            document.getElementById('filterSection').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        } else {
+                            // Clicking background resets filter
+                            filterTimeline('all');
+                        }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { family: "'Noto Sans KR', sans-serif", size: 11 } } },
+                        tooltip: { 
+                            callbacks: { label: (ctx) => ` ${ctx.label}: ${ctx.raw}건 (클릭하여 보기)` },
+                            backgroundColor: 'rgba(30, 30, 30, 0.9)',
+                            padding: 10
+                        }
+                    }
+                }
+            });
+
+            // 2. Timeline Density Chart (Bar)
+            const ctxTime = document.getElementById('timeChart').getContext('2d');
+            new Chart(ctxTime, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(eraCounts),
+                    datasets: [{
+                        label: '사건 수',
+                        data: Object.values(eraCounts),
+                        backgroundColor: '#d6d3d1',
+                        hoverBackgroundColor: '#1e3a8a',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { display: true, color: '#f5f5f4' } },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // --- TIMELINE RENDERING ---
+
+        function renderTimeline(filter = 'all') {
+            const container = document.getElementById('timelineContainer');
+            const noData = document.getElementById('noDataMessage');
+            container.innerHTML = '';
+
+            const filteredData = filter === 'all' ? historyData : historyData.filter(item => item.category === filter);
+
+            if (filteredData.length === 0) {
+                noData.classList.remove('hidden');
+                return;
+            } else {
+                noData.classList.add('hidden');
+            }
+
+            filteredData.forEach((item) => {
+                const config = categoryConfig[item.category];
+                
+                const cardHtml = `
+                    <div class="relative pl-12 sm:pl-16 group" onclick="toggleHighlight(this)">
+                        <!-- Dot -->
+                        <div class="absolute left-[15px] top-6 w-4 h-4 rounded-full border-2 border-white shadow z-10 flex items-center justify-center ${config.color}"></div>
+
+                        <!-- Card -->
+                        <div class="card-hover bg-white p-5 sm:p-6 rounded-lg border ${config.border} shadow-sm relative transition-all duration-300 w-full select-none">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-3 gap-2 pointer-events-none">
+                                <span class="text-2xl sm:text-3xl font-bold text-stone-300 font-mono leading-none transition-colors">${item.year}</span>
+                                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${config.bgLight} ${config.text} w-fit">
+                                    <span>${config.icon}</span>
+                                    ${config.label}
+                                </div>
+                            </div>
+                            <h3 class="text-lg sm:text-xl font-bold text-stone-900 mb-2 leading-tight pointer-events-none transition-colors">${item.title}</h3>
+                            <p class="text-stone-600 text-sm leading-relaxed pointer-events-none">
+                                ${item.desc}
+                            </p>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += cardHtml;
+            });
+        }
+
+        // --- INTERACTION FUNCTIONS ---
+
+        function toggleHighlight(element) {
+            // Find the card inner div
+            const card = element.querySelector('.card-hover');
+            
+            // Toggle active class locally
+            if(card.classList.contains('card-active')) {
+                card.classList.remove('card-active');
+            } else {
+                // Remove active from all others first (Accordion style focus)
+                document.querySelectorAll('.card-active').forEach(el => el.classList.remove('card-active'));
+                card.classList.add('card-active');
+            }
+        }
+
+        function filterTimeline(category) {
+            // Update buttons visually
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                if(btn.dataset.filter === category) {
+                    btn.classList.add('bg-stone-800', 'text-white');
+                    btn.classList.remove('bg-white', 'text-stone-600');
+                } else {
+                    btn.classList.remove('bg-stone-800', 'text-white');
+                    btn.classList.add('bg-white', 'text-stone-600');
+                }
+            });
+
+            // Re-render
+            renderTimeline(category);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            renderTimeline('all');
+        });
+
+    </script>
+</body>
+</html>
