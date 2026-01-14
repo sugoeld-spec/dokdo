@@ -57,8 +57,8 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-18 py-4 items-center">
                 <div class="flex items-center space-x-6">
-                    <!-- Home Button (Island Shape) - Linked to index.html -->
-                    <a href="index.html" class="flex items-center group px-3 py-1.5 rounded-full hover:bg-slate-100 transition-all" title="홈으로 이동">
+                    <!-- Home Button (Island Shape) - Linked to the main archive landing page -->
+                    <a href="dokdo_interactive_archive.html" class="flex items-center group px-3 py-1.5 rounded-full hover:bg-slate-100 transition-all" title="메인 아카이브로 이동">
                         <div class="island-shape mr-3 group-hover:scale-110 transition-transform">
                             <div class="island-peak-west"></div>
                             <div class="island-peak-east"></div>
@@ -67,14 +67,14 @@
                         <span class="text-sm font-bold text-sky-900 tracking-widest uppercase">Home</span>
                     </a>
                     <div class="h-6 w-px bg-slate-200 hidden sm:block"></div>
-                    <a href="index.html" class="flex items-center cursor-pointer">
+                    <a href="dokdo_interactive_archive.html" class="flex items-center cursor-pointer">
                         <span class="text-xl font-bold text-sky-900 serif tracking-tight">독도 아카이브</span>
                     </a>
                 </div>
                 <div class="hidden md:flex space-x-8">
-                    <span class="text-slate-400 text-sm cursor-not-allowed">정책</span>
-                    <span class="text-slate-400 text-sm cursor-not-allowed">연표</span>
-                    <span class="text-slate-400 text-sm cursor-not-allowed">용어</span>
+                    <a href="01.html" class="text-slate-600 font-medium text-sm hover:text-teal-600">정책</a>
+                    <a href="02.html" class="text-slate-600 font-medium text-sm hover:text-teal-600">연표</a>
+                    <a href="03.html" class="text-slate-600 font-medium text-sm hover:text-teal-600">용어</a>
                     <a href="#" class="text-teal-600 font-bold text-sm">의견 수렴</a>
                 </div>
             </div>
@@ -131,9 +131,6 @@
     </main>
 
     <script>
-        /**
-         * Form submission logic
-         */
         const form = document.getElementById('opinionForm');
         const submitBtn = document.getElementById('submitBtn');
         const btnText = document.getElementById('btnText');
@@ -148,11 +145,9 @@
             const content = document.getElementById('content').value;
             const date = new Date().toLocaleString('ko-KR');
 
-            // Show loading state
             submitBtn.disabled = true;
             btnText.innerHTML = '<span class="loader"></span>처리 중...';
 
-            // Call the Apps Script function in Code.gs
             if (typeof google !== 'undefined' && google.script && google.script.run) {
                 google.script.run
                     .withSuccessHandler(function(response) {
@@ -171,7 +166,6 @@
                     })
                     .processForm({ author, content, date });
             } else {
-                // Fallback for local preview without Apps Script environment
                 setTimeout(() => {
                     addToList(author, content, date);
                     form.reset();
@@ -181,9 +175,6 @@
             }
         });
 
-        /**
-         * Add a new card to the list upon successful submission
-         */
         function addToList(author, content, date) {
             if (emptyMsg && document.getElementById('emptyMsg')) emptyMsg.remove();
             const card = document.createElement('div');
@@ -198,18 +189,12 @@
             opinionList.prepend(card);
         }
 
-        /**
-         * Simple HTML escape function for security
-         */
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
         }
 
-        /**
-         * Show feedback message to the user
-         */
         function showMessage(msg, colorClass) {
             statusMsg.textContent = msg;
             statusMsg.className = `mt-4 text-xs text-center block ${colorClass}`;
@@ -217,9 +202,6 @@
             setTimeout(() => { statusMsg.classList.add('hidden'); }, 5000);
         }
 
-        /**
-         * Reset button state
-         */
         function resetButton() {
             submitBtn.disabled = false;
             btnText.innerHTML = '시트에 저장하기';
